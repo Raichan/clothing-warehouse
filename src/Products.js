@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Table from "react-bootstrap/Table";
-import { BsSearch } from "react-icons/bs";
+import { FaSearch } from "react-icons/fa";
+import Availability from "./Availability.js";
 
 const Products = ({ cat }) => {
   const [products, setProducts] = useState([]);
@@ -8,7 +9,7 @@ const Products = ({ cat }) => {
   const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    setSearch(""); // Empty search field
+    setSearch(""); // Empty search bar
     getProducts(cat);
   }, [cat]);
 
@@ -65,26 +66,10 @@ const Products = ({ cat }) => {
                       "application/xml"
                     );
 
-                    let availability;
-                    switch (
-                      availabilityXml.getElementsByTagName("INSTOCKVALUE")[0]
-                        .childNodes[0].nodeValue
-                    ) {
-                      case "INSTOCK":
-                        availability = 2;
-                        break;
-                      case "LESSTHAN10":
-                        availability = 1;
-                        break;
-                      case "OUTOFSTOCK":
-                        availability = 0;
-                        break;
-                      default:
-                        availability = -1; // unknown
-                        break;
-                    }
-
                     // Update product availability
+                    let availability = availabilityXml.getElementsByTagName(
+                      "INSTOCKVALUE"
+                    )[0].childNodes[0].nodeValue;
                     sorted[i].availability = availability;
                   }
                 }
@@ -115,7 +100,7 @@ const Products = ({ cat }) => {
       <div class="input-group mb-3 search">
         <div class="input-group-prepend">
           <span class="input-group-text">
-            <BsSearch />
+            <FaSearch />
           </span>
         </div>
         <input
@@ -144,7 +129,9 @@ const Products = ({ cat }) => {
                     {item.price + " €"}
                     {/* Took the liberty of assuming these are euros*/}
                   </td>
-                  <td>{item.availability ? " " + item.availability : " -1"}</td>
+                  <td>
+                    <Availability availability={item.availability} />
+                  </td>
                 </tr>
               );
             })}
