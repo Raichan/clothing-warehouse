@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from "react";
 import Table from "react-bootstrap/Table";
+import { BsSearch } from "react-icons/bs";
 
 const Products = ({ cat }) => {
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
+    setSearch(""); // Empty search field
     getProducts(cat);
   }, [cat]);
+
+  const updateSearch = (e) => {
+    setSearch(e.target.value);
+  };
+
+  useEffect(() => {
+    const results = products.filter((product) =>
+      product.name.toLowerCase().includes(search.toLowerCase())
+    );
+    setSearchResults(results);
+  }, [search, products]);
 
   const getProducts = (category) => {
     // Get products
@@ -97,27 +112,45 @@ const Products = ({ cat }) => {
   return (
     <div>
       <h5 class="text-center catName">{cat}</h5>
-      <Table striped>
-        <tbody>
-          {products.map(function (item, i) {
-            return (
-              <tr key={i}>
-                <td>
-                  {item.name}
-                  <br />
-                  {item.manufacturer}
-                </td>
-                <td>
-                  {item.color.join(", ")}
-                  <br />
-                  {item.price}
-                </td>
-                <td>{item.availability ? " " + item.availability : " -1"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </Table>
+      <div class="input-group mb-3 search">
+        <div class="input-group-prepend">
+          <span class="input-group-text">
+            <BsSearch />
+          </span>
+        </div>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search"
+          aria-label="Search"
+          value={search}
+          onChange={updateSearch}
+        />
+      </div>
+      <div class="productTable">
+        <Table striped>
+          <tbody>
+            {searchResults.map(function (item, i) {
+              return (
+                <tr key={i}>
+                  <td>
+                    {item.name}
+                    <br />
+                    {item.manufacturer}
+                  </td>
+                  <td>
+                    {item.color.join(", ")}
+                    <br />
+                    {item.price + " €"}
+                    {/* Took the liberty of assuming these are euros*/}
+                  </td>
+                  <td>{item.availability ? " " + item.availability : " -1"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      </div>
     </div>
   );
 };
