@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Table from "react-bootstrap/Table";
 
-const Products = () => {
+const Products = ({ cat }) => {
   const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    getProducts(cat);
+  }, [cat]);
 
   const getProducts = (category) => {
     // Get products
@@ -20,9 +25,8 @@ const Products = () => {
             manufacturers.push(product.manufacturer);
           }
         });
-        //console.log(manufacturers); // "xoon", "reps", "nouke", "derp", "abiplos"
+        // "xoon", "reps", "nouke", "derp", "abiplos"
         manufacturers.forEach((manufacturer, m) => {
-          console.log("fetching " + manufacturers);
           fetch(
             "https://bad-api-assignment.reaktor.com/availability/" +
               manufacturer
@@ -67,14 +71,6 @@ const Products = () => {
 
                     // Update product availability
                     sorted[i].availability = availability;
-                    console.log(
-                      "product " +
-                        product.name +
-                        " availability: " +
-                        availability
-                    );
-                  } else {
-                    console.log("id " + product.id + " not found");
                   }
                 }
               });
@@ -100,23 +96,28 @@ const Products = () => {
 
   return (
     <div>
-      <p>Welcome! Choose a product category.</p>
-      <button onClick={() => getProducts("jackets")}>Jackets</button>
-      <button onClick={() => getProducts("shirts")}>Shirts</button>
-      <button onClick={() => getProducts("accessories")}>Accessories</button>
-      <ul>
-        {products.map(function (item, i) {
-          return (
-            <li key={i}>
-              {item.name +
-                " " +
-                item.id +
-                " " +
-                (item.availability ? " " + item.availability : " -1")}
-            </li>
-          );
-        })}
-      </ul>
+      <h5 class="text-center catName">{cat}</h5>
+      <Table striped>
+        <tbody>
+          {products.map(function (item, i) {
+            return (
+              <tr key={i}>
+                <td>
+                  {item.name}
+                  <br />
+                  {item.manufacturer}
+                </td>
+                <td>
+                  {item.color.join(", ")}
+                  <br />
+                  {item.price}
+                </td>
+                <td>{item.availability ? " " + item.availability : " -1"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
     </div>
   );
 };
