@@ -3,36 +3,28 @@ import Table from "react-bootstrap/Table";
 import { FaSearch } from "react-icons/fa";
 import Availability from "./Availability.js";
 
-const Products = ({ cat }) => {
-  const [products, setProducts] = useState([]);
+const Products = ({ category, productList, updateProductList }) => {
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-
-  useEffect(() => {
-    setSearch(""); // Empty search bar
-    getProducts(cat);
-  }, [cat]);
+  const [searchResults, setSearchResults] = useState(productList);
 
   const updateSearch = (e) => {
     setSearch(e.target.value);
   };
 
   useEffect(() => {
-    const results = products.filter((product) =>
+    const results = productList.filter((product) =>
       product.name.toLowerCase().includes(search.toLowerCase())
     );
     setSearchResults(results);
-  }, [search, products]);
+  }, [search, productList]);
 
-  const getProducts = (category) => {
-    // Get products
+  const getProducts = () => {
     let sorted = [];
     fetch("https://bad-api-assignment.reaktor.com/products/" + category)
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
         sorted = data.sort((a, b) => (a.name > b.name ? 1 : -1));
-        //setProducts(sorted);
 
         // Find all manufacturers
         let manufacturers = [];
@@ -49,31 +41,36 @@ const Products = ({ cat }) => {
           )
             .then((response) => response.json())
             .then((data) => {
-              console.log("processing " + manufacturer);
-              const parser = new DOMParser();
+              // Check that response is longer than []
+              if (data.response.length > 2) {
+                console.log("processing " + manufacturer);
+                const parser = new DOMParser();
 
-              // Loop through products, set availabilities
-              sorted.forEach((product, i) => {
-                // Skip products from wrong manufacturers
-                if (product.manufacturer === manufacturer) {
-                  let avLine = data.response.find(
-                    (p) => p.id.toLowerCase() === product.id
-                  );
-
-                  if (avLine !== undefined) {
-                    const availabilityXml = parser.parseFromString(
-                      avLine.DATAPAYLOAD,
-                      "application/xml"
+                // Loop through products, set availabilities
+                sorted.forEach((product, i) => {
+                  // Skip products from wrong manufacturers
+                  if (product.manufacturer === manufacturer) {
+                    let avLine = data.response.find(
+                      (p) => p.id.toLowerCase() === product.id
                     );
 
-                    // Update product availability
-                    let availability = availabilityXml.getElementsByTagName(
-                      "INSTOCKVALUE"
-                    )[0].childNodes[0].nodeValue;
-                    sorted[i].availability = availability;
+                    if (avLine !== undefined) {
+                      const availabilityXml = parser.parseFromString(
+                        avLine.DATAPAYLOAD,
+                        "application/xml"
+                      );
+
+                      // Update product availability
+                      let availability = availabilityXml.getElementsByTagName(
+                        "INSTOCKVALUE"
+                      )[0].childNodes[0].nodeValue;
+                      sorted[i].availability = availability;
+                    }
                   }
-                }
-              });
+                });
+              } else {
+                console.log("Availability API error: " + manufacturer);
+              }
             })
             .then(() => {
               console.log("done " + manufacturer);
@@ -81,7 +78,8 @@ const Products = ({ cat }) => {
               // TODO find a more generic solution
               if (m === 4) {
                 // Update availabilities
-                setProducts(sorted);
+                //setProducts(sorted);
+                updateProductList(category, sorted);
               }
             })
             .catch((err) => {
@@ -94,25 +92,36 @@ const Products = ({ cat }) => {
       });
   };
 
+  // Fetch products on page load
+  useEffect(() => {
+    console.log("get products");
+
+    getProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
+
   return (
     <div>
-      <h5 class="text-center catName">{cat}</h5>
-      <div class="input-group mb-3 search">
-        <div class="input-group-prepend">
-          <span class="input-group-text">
+      {/* Capitalize header */}
+      <h5 className="text-center catHeader">
+        {category.charAt(0).toUpperCase() + category.slice(1)}
+      </h5>
+      <div className="input-group mb-3 search">
+        <div className="input-group-prepend">
+          <span className="input-group-text">
             <FaSearch />
           </span>
         </div>
         <input
           type="text"
-          class="form-control"
+          className="form-control"
           placeholder="Search"
           aria-label="Search"
           value={search}
           onChange={updateSearch}
         />
       </div>
-      <div class="productTable">
+      <div className="productTable">
         <Table striped>
           <tbody>
             {searchResults.map(function (item, i) {

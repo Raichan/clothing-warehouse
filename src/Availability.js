@@ -9,14 +9,19 @@ import {
 const Availability = ({ availability }) => {
   switch (availability) {
     case "INSTOCK":
-      return <FaCheckCircle title="In stock" class="text-success" />;
+      return <FaCheckCircle title="In stock" className="text-success" />;
     case "LESSTHAN10":
-      return <FaExclamationCircle title="Less than 10" class="text-warning" />;
+      return (
+        <FaExclamationCircle title="Less than 10" className="text-warning" />
+      );
     case "OUTOFSTOCK":
-      return <FaTimesCircle title="Out of stock" class="text-danger" />;
+      return <FaTimesCircle title="Out of stock" className="text-danger" />;
     default:
       return (
-        <FaQuestionCircle title="Availability not found" class="text-muted" />
+        <FaQuestionCircle
+          title="Availability not found"
+          className="text-muted"
+        />
       );
   }
 };
