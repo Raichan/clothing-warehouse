@@ -28,64 +28,84 @@ const Products = ({ category, productList, updateProductList }) => {
 
   // Load products and their availability
   const getProducts = () => {
-    let sorted = [];
     setLoadingError(false); // Reset loading status
     axios.get(productUrl + category).then((res) => {
-      const data = res.data;
-      console.log(data);
-      sorted = data.sort((a, b) => (a.name > b.name ? 1 : -1));
+      const productData = res.data;
 
       // Find all manufacturers
       let manufacturers = [];
-      data.forEach((product) => {
+      productData.forEach((product) => {
         if (!manufacturers.includes(product.manufacturer)) {
           manufacturers.push(product.manufacturer);
         }
       });
-      // "xoon", "reps", "nouke", "derp", "abiplos"
-      // Get availability data
+
+      // Set up call and availability object for each manufacturer
       let axiosCalls = [];
       let availabilities = [];
-      manufacturers.forEach((manufacturer) => {
+      manufacturers.forEach((manufacturer, i) => {
         axiosCalls.push(axios.get(availabilityUrl + manufacturer));
+        availabilities.push({ name: manufacturer, list: [] });
       });
+
       axios.all(axiosCalls).then(
         axios.spread((...responses) => {
-          responses.forEach((res) => {
+          responses.forEach((res, i) => {
             let result = res.data.response;
             // Check that response is longer than [] (API error)
             if (result.length > 2) {
-              availabilities.push(...result);
+              availabilities[i].list = result;
             } else {
               // API error, set error flag
-              console.log("manufacturer error");
+              console.log("Availability API error: " + availabilities[i].name);
               setLoadingError(true);
             }
           });
-          console.log(availabilities);
-          const parser = new DOMParser();
+
           // Loop through products, set availabilities
-          sorted.forEach((product, i) => {
-            let avLine = availabilities.find(
-              (p) => p.id.toLowerCase() === product.id
+          let productsUpdate = [];
+          const parser = new DOMParser();
+          availabilities.forEach((manufacturer) => {
+            let manufacturerProducts = productData.filter(
+              (product) => product.manufacturer === manufacturer.name
             );
 
-            if (avLine !== undefined) {
-              // Parse availability status
-              const availabilityXml = parser.parseFromString(
-                avLine.DATAPAYLOAD,
-                "application/xml"
-              );
-              // Update product availability
-              let availability = availabilityXml.getElementsByTagName(
-                "INSTOCKVALUE"
-              )[0].childNodes[0].nodeValue;
-              sorted[i].availability = availability;
+            // Skip failed manufacturers
+            if (manufacturer.list.length > 0) {
+              console.log("handling " + manufacturer.name);
+              manufacturerProducts.forEach((product) => {
+                // Find availability data matching product id
+                let avLine = manufacturer.list.find(
+                  (p) => p.id.toLowerCase() === product.id
+                );
+                if (avLine !== undefined) {
+                  // Parse availability status
+                  const availabilityXml = parser.parseFromString(
+                    avLine.DATAPAYLOAD,
+                    "application/xml"
+                  );
+                  // Update product availability
+                  let availability = availabilityXml.getElementsByTagName(
+                    "INSTOCKVALUE"
+                  )[0].childNodes[0].nodeValue;
+                  product.availability = availability;
+                  productsUpdate.push(product);
+                }
+              });
+            } else {
+              console.log("skipped " + manufacturer.name);
+              // Show failed products in the list anyway
+              manufacturerProducts.forEach((product) => {
+                productsUpdate.push(product);
+              });
             }
           });
 
-          // All products have been handled, update availabilities
-          updateProductList(category, sorted);
+          // All products have been handled, sort alphabetically and update availabilities
+          productsUpdate = productsUpdate.sort((a, b) =>
+            a.name > b.name ? 1 : -1
+          );
+          updateProductList(category, productsUpdate);
         })
       );
     });
