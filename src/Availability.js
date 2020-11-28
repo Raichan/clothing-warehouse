@@ -1,24 +1,42 @@
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  FaCheckCircle,
-  FaExclamationCircle,
-  FaTimesCircle,
-  FaQuestionCircle,
-} from "react-icons/fa";
+  faCheckCircle,
+  faExclamationCircle,
+  faTimesCircle,
+  faQuestionCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Availability = ({ availability }) => {
   switch (availability) {
     case "INSTOCK":
-      return <FaCheckCircle title="In stock" className="text-success" />;
+      return (
+        <FontAwesomeIcon
+          icon={faCheckCircle}
+          title="In stock"
+          className="text-success"
+        />
+      );
     case "LESSTHAN10":
       return (
-        <FaExclamationCircle title="Less than 10" className="text-warning" />
+        <FontAwesomeIcon
+          icon={faExclamationCircle}
+          title="Less than 10"
+          className="text-warning"
+        />
       );
     case "OUTOFSTOCK":
-      return <FaTimesCircle title="Out of stock" className="text-danger" />;
+      return (
+        <FontAwesomeIcon
+          icon={faTimesCircle}
+          title="Out of stock"
+          className="text-danger"
+        />
+      );
     default:
       return (
-        <FaQuestionCircle
+        <FontAwesomeIcon
+          icon={faQuestionCircle}
           title="Availability not found"
           className="text-muted"
         />

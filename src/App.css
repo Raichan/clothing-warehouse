@@ -1,7 +1,47 @@
+:root {
+  --lighterblue: #89f7fe;
+  --darkerblue: #66a6ff;
+}
+
+body {
+  overflow-y: scroll; /* Always show scrollbar for faster scrolling*/
+}
+
+*::-webkit-scrollbar {
+  width: 15px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(102, 166, 255, 0.2);
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--darkerblue);
+  border-radius: 5px;
+  border: 1px solid var(--lighterblue);
+}
+*::-webkit-scrollbar-button:single-button {
+  background-color: rgba(102, 166, 255, 0.2);
+  display: block;
+  border-style: solid;
+  height: 15px;
+  width: 15px;
+}
+*::-webkit-scrollbar-button:single-button:vertical:decrement {
+  border-width: 8px 8px 8px 8px;
+  border-color: transparent transparent #555555 transparent;
+}
+*::-webkit-scrollbar-button:single-button:vertical:increment {
+  border-width: 8px 8px 8px 8px;
+  border-color: #555555 transparent transparent transparent;
+}
+
 #navbar {
   text-align: center;
   padding: 15px;
-  background-image: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+  background-image: linear-gradient(
+    120deg,
+    var(--lighterblue) 0%,
+    var(--darkerblue) 100%
+  );
 }
 
 #navbar ul {
@@ -39,6 +79,14 @@
 .search {
   max-width: 300px;
   margin: auto;
+}
+
+.errorText {
+  line-height: 30px;
+}
+
+.errorText .btn {
+  margin: 0 5px;
 }
 
 .productTable {
