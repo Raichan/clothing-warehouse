@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Table from "react-bootstrap/Table";
-import { FaSearch } from "react-icons/fa";
 import Availability from "./Availability.js";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const Products = ({ category, productList, updateProductList }) => {
   const [search, setSearch] = useState("");
@@ -109,7 +110,7 @@ const Products = ({ category, productList, updateProductList }) => {
       <div className="input-group mb-3 search">
         <div className="input-group-prepend">
           <span className="input-group-text">
-            <FaSearch />
+            <FontAwesomeIcon icon={faSearch} />
           </span>
         </div>
         <input
@@ -121,6 +122,11 @@ const Products = ({ category, productList, updateProductList }) => {
           onChange={updateSearch}
         />
       </div>
+      <p
+        className={"text-center" + (searchResults.length > 0 ? " d-none" : "")}
+      >
+        Loading <FontAwesomeIcon icon={faSpinner} pulse />
+      </p>
       <div className="productTable">
         <Table striped>
           <tbody>
