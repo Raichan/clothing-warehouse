@@ -8,7 +8,8 @@ const Products = ({ category, productList, updateProductList }) => {
   const [search, setSearch] = useState(""); // Search bar
   const [searchResults, setSearchResults] = useState(productList); // Filters results
   const [availability, setAvailability] = useState({});
-  const [loading, setLoading] = useState(100); // Large default value
+  const [loadingProducts, setLoadingProducts] = useState(1); // Loading countdowns
+  const [loadingAvailability, setLoadingAvailability] = useState(1);
   const productUrl = "https://bad-api-assignment.reaktor.com/products/";
   const availabilityUrl =
     "https://bad-api-assignment.reaktor.com/availability/";
@@ -35,11 +36,20 @@ const Products = ({ category, productList, updateProductList }) => {
   // Decrease loading countdown when availability has been added
   useEffect(() => {
     if (Object.keys(availability).length !== 0) {
-      console.log("lowering loading from " + loading);
-      setLoading(loading - 1);
+      console.log("lowering loading from " + loadingAvailability);
+      setLoadingAvailability(loadingAvailability - 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availability]);
+
+  useEffect(() => {
+    console.log(productList);
+    if (productList.length > 0) {
+      console.log("products found, decreasing countdown");
+      setLoadingProducts(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productList]);
 
   const availabilities = {};
 
@@ -79,7 +89,8 @@ const Products = ({ category, productList, updateProductList }) => {
   };
 
   // Load products and their availability
-  const getProducts = (forceAvailability = false) => {
+  const getProducts = (refresh = false) => {
+    setLoadingProducts(1);
     axios
       .get(productUrl + category)
       .then((res) => {
@@ -87,9 +98,9 @@ const Products = ({ category, productList, updateProductList }) => {
 
         updateProductList(category, productData);
 
-        // If availabilities have not been set, get them
+        // If availabilities have not been set or if refreshing the page, get the availability data
         console.log(availability);
-        if (Object.keys(availability).length === 0 || forceAvailability) {
+        if (Object.keys(availability).length === 0 || refresh) {
           console.log("finding manufacturers");
           // Find all manufacturers
           let manufacturers = [];
@@ -100,7 +111,7 @@ const Products = ({ category, productList, updateProductList }) => {
           });
 
           // Set loading countdown
-          setLoading(manufacturers.length);
+          setLoadingAvailability(manufacturers.length);
           manufacturers.forEach((manufacturer, i) => {
             getAvailabilityData(manufacturer, 3);
           });
@@ -126,7 +137,6 @@ const Products = ({ category, productList, updateProductList }) => {
   // Reset search results and availability, then reload
   const refresh = () => {
     console.log("refresh");
-    setLoading(true);
     setSearchResults([]);
     getProducts(true);
   };
@@ -162,14 +172,16 @@ const Products = ({ category, productList, updateProductList }) => {
               aria-label="Refresh"
               onClick={() => refresh()}
               className={
-                "btn btn-outline-secondary" + (loading !== 0 ? " d-none" : "")
+                "btn btn-outline-secondary" +
+                (loadingProducts || loadingAvailability ? " d-none" : "")
               }
             >
               <FontAwesomeIcon icon={faRedo} />
             </button>
             <FontAwesomeIcon
               className={
-                "refresh text-center h3" + (loading === 0 ? " d-none" : "")
+                "refresh text-center h3" +
+                (!loadingProducts && !loadingAvailability ? " d-none" : "")
               }
               icon={faSpinner}
               pulse
