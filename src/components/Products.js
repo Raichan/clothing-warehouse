@@ -124,6 +124,8 @@ const Products = ({ category, productList, updateProductList }) => {
 
   // Load products when the category is opened for the first time
   useEffect(() => {
+    // Empty the search bar
+    setSearch("");
     if (productList.length === 0) {
       getProducts();
     }
