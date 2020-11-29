@@ -28,7 +28,3 @@ There is also a running demo at http://clothing-warehouse-demo.herokuapp.com/.
 - It is currently assumed that the stock doesn't change often so constant refreshing isn't necessary. Could be improved to suit a warehouse where availability constantly changes.
 - Currently the old availability data is visible while refreshing, which may be confusing for the user.
 - To improve speed, add pagination or some other way to not have to render the full list at once.
-
-```
-
-```
