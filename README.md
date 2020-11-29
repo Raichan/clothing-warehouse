@@ -6,7 +6,8 @@ A simple product availability listing app for a fictional clothing warehouse. Cr
 
 ## Installation
 
-```git clone https://github.com/Raichan/clothing-warehouse.git
+```
+git clone https://github.com/Raichan/clothing-warehouse.git
 cd clothing-warehouse
 npm install
 npm start
