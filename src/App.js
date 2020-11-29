@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import Navbar from "./Navbar.js";
-import Products from "./Products.js";
+import Navbar from "./components/Navbar.js";
+import Products from "./components/Products.js";
 import "./App.css";
 
 const App = () => {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Table from "react-bootstrap/Table";
-import Availability from "./Availability.js";
+import ProductTable from "./ProductTable.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
@@ -140,32 +139,11 @@ const Products = ({ category, productList, updateProductList }) => {
           Reload
         </button>
       </p>
-      {/* TODO .sort((a, b) => a.name > b.name ? 1 : -1); */}
       <div className="productTable">
-        <Table striped>
-          <tbody>
-            {searchResults.map(function (item, i) {
-              return (
-                <tr key={i}>
-                  <td>
-                    {item.name}
-                    <br />
-                    {item.manufacturer}
-                  </td>
-                  <td>
-                    {item.color.join(", ")}
-                    <br />
-                    {item.price + " €"}
-                    {/* Took the liberty of assuming these are euros*/}
-                  </td>
-                  <td>
-                    <Availability availability={availability[item.id]} />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
+        <ProductTable
+          searchResults={searchResults}
+          availability={availability}
+        />
       </div>
     </div>
   );
