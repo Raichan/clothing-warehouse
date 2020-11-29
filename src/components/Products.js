@@ -7,7 +7,6 @@ import { faSearch, faSpinner } from "@fortawesome/free-solid-svg-icons";
 const Products = ({ category, productList, updateProductList }) => {
   const [search, setSearch] = useState(""); // Search bar
   const [searchResults, setSearchResults] = useState(productList); // Filters results
-  const [loadingError, setLoadingError] = useState(false); // Availability API error flag
   const [availability, setAvailability] = useState({});
   const productUrl = "https://bad-api-assignment.reaktor.com/products/";
   const availabilityUrl =
@@ -32,57 +31,67 @@ const Products = ({ category, productList, updateProductList }) => {
     setAvailability(newList);
   };
 
+  const availabilities = {};
+
+  const getAvailabilityData = (manufacturer, n) => {
+    const parser = new DOMParser();
+    axios
+      .get(availabilityUrl + manufacturer)
+      .then((res) => {
+        console.log("handling " + manufacturer + ", n = " + n);
+        let result = res.data.response;
+        // Check that response is longer than [] (API error)
+        if (result.length > 2) {
+          result.forEach((a) => {
+            const availabilityXml = parser.parseFromString(
+              a.DATAPAYLOAD,
+              "application/xml"
+            );
+            let availability = availabilityXml.getElementsByTagName(
+              "INSTOCKVALUE"
+            )[0].childNodes[0].nodeValue;
+            availabilities[a.id.toLowerCase()] = availability;
+          });
+          addAvailabilities(availabilities);
+        } else {
+          // API error, try 3 times before giving up
+          if (n === 1) {
+            console.error("Availability API error: " + manufacturer);
+          } else {
+            console.log(manufacturer + " failed, n = " + n);
+            getAvailabilityData(manufacturer, n - 1);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
   // Load products and their availability
   const getProducts = () => {
-    setLoadingError(false); // Reset loading status
     axios
       .get(productUrl + category)
       .then((res) => {
         const productData = res.data;
 
-        // Find all manufacturers
-        let manufacturers = [];
-        productData.forEach((product) => {
-          if (!manufacturers.includes(product.manufacturer)) {
-            manufacturers.push(product.manufacturer);
-          }
-        });
-
         updateProductList(category, productData);
 
-        // getAvailabilities(manufacturers);
-        // Set up call and availability object for each manufacturer
-        let availabilities = {};
-        const parser = new DOMParser();
-        manufacturers.forEach((manufacturer, i) => {
-          axios
-            .get(availabilityUrl + manufacturer)
-            .then((res) => {
-              console.log("handling " + manufacturer);
-              let result = res.data.response;
-              // Check that response is longer than [] (API error)
-              if (result.length > 2) {
-                result.forEach((a) => {
-                  const availabilityXml = parser.parseFromString(
-                    a.DATAPAYLOAD,
-                    "application/xml"
-                  );
-                  let availability = availabilityXml.getElementsByTagName(
-                    "INSTOCKVALUE"
-                  )[0].childNodes[0].nodeValue;
-                  availabilities[a.id.toLowerCase()] = availability;
-                });
-                addAvailabilities(availabilities);
-              } else {
-                // API error, set error flag
-                console.error("Availability API error: " + manufacturer);
-                setLoadingError(true);
-              }
-            })
-            .catch((err) => {
-              console.error(err);
-            });
-        });
+        // If availabilities have not been set, get them
+        if (Object.keys(availability).length === 0) {
+          console.log("finding manufacturers");
+          // Find all manufacturers
+          let manufacturers = [];
+          productData.forEach((product) => {
+            if (!manufacturers.includes(product.manufacturer)) {
+              manufacturers.push(product.manufacturer);
+            }
+          });
+
+          manufacturers.forEach((manufacturer, i) => {
+            getAvailabilityData(manufacturer, 3);
+          });
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -123,21 +132,6 @@ const Products = ({ category, productList, updateProductList }) => {
         className={"text-center" + (searchResults.length > 0 ? " d-none" : "")}
       >
         Loading <FontAwesomeIcon icon={faSpinner} pulse />
-      </p>
-      {/* Only slow the error text if any availability calls failed */}
-      <p
-        className={
-          "text-center text-danger errorText" + (loadingError ? "" : " d-none")
-        }
-      >
-        Loading availabilities failed for one or more manufacturers.
-        <button
-          type="button"
-          className="btn btn-outline-danger btn-sm"
-          onClick={() => getProducts()}
-        >
-          Reload
-        </button>
       </p>
       <div className="productTable">
         <ProductTable
