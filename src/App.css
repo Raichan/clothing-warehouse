@@ -93,3 +93,7 @@ body {
   max-width: 600px;
   margin: auto;
 }
+
+.refresh {
+  margin: 3px;
+}
