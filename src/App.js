@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Navbar from "./components/Navbar.js";
 import Products from "./components/Products.js";
@@ -15,10 +15,6 @@ const App = () => {
   const updateProductList = (category, products) => {
     setProductList({ ...productList, [category]: products });
   };
-
-  useEffect(() => {
-    console.log(productList);
-  }, [productList]);
 
   return (
     <Router>

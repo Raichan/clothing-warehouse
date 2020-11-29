@@ -7,13 +7,15 @@ import { faSearch, faRedo, faSpinner } from "@fortawesome/free-solid-svg-icons";
 const Products = ({ category, productList, updateProductList }) => {
   const [search, setSearch] = useState(""); // Search bar
   const [searchResults, setSearchResults] = useState(productList); // Filters results
-  const [availability, setAvailability] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [availability, setAvailability] = useState({}); // Availability data for all manufacturers
+  const [loading, setLoading] = useState(false); // Show loading spinner or refresh button
   const productUrl = "https://bad-api-assignment.reaktor.com/products/";
   const availabilityUrl =
     "https://bad-api-assignment.reaktor.com/availability/";
   const maxCalls = 3; // Maximum times to try an availability call
-  let requestStatus = {};
+  let requestStatus = {}; // Status of each running API request
+  let availabilities = {}; // Temporary container for availability
+
   // Search bar
   const updateSearch = (e) => {
     setSearch(e.target.value);
@@ -37,17 +39,13 @@ const Products = ({ category, productList, updateProductList }) => {
   const updateRequestStatus = (request, status) => {
     requestStatus[request] = status;
     if (Object.keys(requestStatus).every((k) => !requestStatus[k])) {
-      setLoading(false); // All requests false
-      console.log("loading false");
+      setLoading(false); // All values false, no requests running
     } else {
       setLoading(true); // At least one request hasn't finished
-      console.log("loading true");
     }
-    console.log(requestStatus);
   };
 
-  const availabilities = {};
-
+  // Get availability data for manufacturer, try at most n times
   const getAvailabilityData = (manufacturer, n) => {
     const parser = new DOMParser();
     let url = availabilityUrl + manufacturer;
@@ -57,7 +55,6 @@ const Products = ({ category, productList, updateProductList }) => {
     axios
       .get(url)
       .then((res) => {
-        console.log("handling " + manufacturer + ", n = " + n);
         let result = res.data.response;
         // Check that response is longer than [] (API error)
         if (result.length > 2) {
@@ -74,12 +71,11 @@ const Products = ({ category, productList, updateProductList }) => {
           addAvailabilities(availabilities);
           updateRequestStatus(res.config.url, false); // Set call as finished
         } else {
-          // API error, try 3 times before giving up
+          // API error, give up or try again
           if (n === 1) {
             updateRequestStatus(res.config.url, false); // Set call as finished
             console.error("Availability API error: " + manufacturer);
           } else {
-            console.log(manufacturer + " failed, n = " + n);
             getAvailabilityData(manufacturer, n - 1);
           }
         }
@@ -98,12 +94,10 @@ const Products = ({ category, productList, updateProductList }) => {
       .then((res) => {
         const productData = res.data;
         updateProductList(category, productData);
-        updateRequestStatus(res.config.url, false); // Set call as finished
+        updateRequestStatus(res.config.url, false); // Set the call as finished
 
         // If availabilities have not been set or if refreshing the page, get the availability data
-        console.log(availability);
         if (Object.keys(availability).length === 0 || refresh) {
-          console.log("finding manufacturers");
           // Find all manufacturers
           let manufacturers = [];
           productData.forEach((product) => {
@@ -122,24 +116,19 @@ const Products = ({ category, productList, updateProductList }) => {
       });
   };
 
-  // Fetch products on first page load only
-  useEffect(() => {
-    console.log(productList);
-    if (productList.length === 0) {
-      console.log("get products");
-      getProducts();
-    } else {
-      console.log("don't get products");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
-
-  // Reset search results and availability, then reload
+  // Reset search results, then reload
   const refresh = () => {
-    console.log("refresh");
     setSearchResults([]);
     getProducts(true);
   };
+
+  // Load products when the category is opened for the first time
+  useEffect(() => {
+    if (productList.length === 0) {
+      getProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
 
   return (
     <div>
@@ -166,11 +155,11 @@ const Products = ({ category, productList, updateProductList }) => {
               />
             </div>
           </div>
-          <div class="col-auto">
+          <div className="col-auto">
             {/* Show a spinner when loading, refresh icon otherwise */}
             <button
               aria-label="Refresh"
-              onClick={() => refresh()}
+              onClick={refresh}
               className={
                 "btn btn-outline-secondary" + (loading ? " d-none" : "")
               }

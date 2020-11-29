@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const Availability = ({ availability }) => {
+  // Show icon depending on availability value
   switch (availability) {
     case "INSTOCK":
       return (

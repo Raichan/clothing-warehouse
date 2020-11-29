@@ -3,6 +3,7 @@ import Table from "react-bootstrap/Table";
 import Availability from "./Availability.js";
 
 const ProductTable = ({ searchResults, availability }) => {
+  // Sort products alphabetically
   const products = searchResults.sort((a, b) => (a.name > b.name ? 1 : -1));
 
   return (
