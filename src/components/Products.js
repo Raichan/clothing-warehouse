@@ -8,12 +8,12 @@ const Products = ({ category, productList, updateProductList }) => {
   const [search, setSearch] = useState(""); // Search bar
   const [searchResults, setSearchResults] = useState(productList); // Filters results
   const [availability, setAvailability] = useState({});
-  const [loadingProducts, setLoadingProducts] = useState(1); // Loading countdowns
-  const [loadingAvailability, setLoadingAvailability] = useState(1);
+  const [loading, setLoading] = useState(false);
   const productUrl = "https://bad-api-assignment.reaktor.com/products/";
   const availabilityUrl =
     "https://bad-api-assignment.reaktor.com/availability/";
-
+  const maxCalls = 3; // Maximum times to try an availability call
+  let requestStatus = {};
   // Search bar
   const updateSearch = (e) => {
     setSearch(e.target.value);
@@ -33,30 +33,29 @@ const Products = ({ category, productList, updateProductList }) => {
     setAvailability(newList);
   };
 
-  // Decrease loading countdown when availability has been added
-  useEffect(() => {
-    if (Object.keys(availability).length !== 0) {
-      console.log("lowering loading from " + loadingAvailability);
-      setLoadingAvailability(loadingAvailability - 1);
+  // Keep track of which calls are still running
+  const updateRequestStatus = (request, status) => {
+    requestStatus[request] = status;
+    if (Object.keys(requestStatus).every((k) => !requestStatus[k])) {
+      setLoading(false); // All requests false
+      console.log("loading false");
+    } else {
+      setLoading(true); // At least one request hasn't finished
+      console.log("loading true");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availability]);
-
-  useEffect(() => {
-    console.log(productList);
-    if (productList.length > 0) {
-      console.log("products found, decreasing countdown");
-      setLoadingProducts(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productList]);
+    console.log(requestStatus);
+  };
 
   const availabilities = {};
 
   const getAvailabilityData = (manufacturer, n) => {
     const parser = new DOMParser();
+    let url = availabilityUrl + manufacturer;
+    if (n === maxCalls) {
+      updateRequestStatus(url, true); // First try, set the call as running
+    }
     axios
-      .get(availabilityUrl + manufacturer)
+      .get(url)
       .then((res) => {
         console.log("handling " + manufacturer + ", n = " + n);
         let result = res.data.response;
@@ -73,9 +72,11 @@ const Products = ({ category, productList, updateProductList }) => {
             availabilities[a.id.toLowerCase()] = availability;
           });
           addAvailabilities(availabilities);
+          updateRequestStatus(res.config.url, false); // Set call as finished
         } else {
           // API error, try 3 times before giving up
           if (n === 1) {
+            updateRequestStatus(res.config.url, false); // Set call as finished
             console.error("Availability API error: " + manufacturer);
           } else {
             console.log(manufacturer + " failed, n = " + n);
@@ -90,13 +91,14 @@ const Products = ({ category, productList, updateProductList }) => {
 
   // Load products and their availability
   const getProducts = (refresh = false) => {
-    setLoadingProducts(1);
+    let url = productUrl + category;
+    updateRequestStatus(url, true); // Set the call as running
     axios
-      .get(productUrl + category)
+      .get(url)
       .then((res) => {
         const productData = res.data;
-
         updateProductList(category, productData);
+        updateRequestStatus(res.config.url, false); // Set call as finished
 
         // If availabilities have not been set or if refreshing the page, get the availability data
         console.log(availability);
@@ -110,10 +112,8 @@ const Products = ({ category, productList, updateProductList }) => {
             }
           });
 
-          // Set loading countdown
-          setLoadingAvailability(manufacturers.length);
           manufacturers.forEach((manufacturer, i) => {
-            getAvailabilityData(manufacturer, 3);
+            getAvailabilityData(manufacturer, maxCalls);
           });
         }
       })
@@ -172,17 +172,13 @@ const Products = ({ category, productList, updateProductList }) => {
               aria-label="Refresh"
               onClick={() => refresh()}
               className={
-                "btn btn-outline-secondary" +
-                (loadingProducts || loadingAvailability ? " d-none" : "")
+                "btn btn-outline-secondary" + (loading ? " d-none" : "")
               }
             >
               <FontAwesomeIcon icon={faRedo} />
             </button>
             <FontAwesomeIcon
-              className={
-                "refresh text-center h3" +
-                (!loadingProducts && !loadingAvailability ? " d-none" : "")
-              }
+              className={"refresh text-center h3" + (loading ? "" : " d-none")}
               icon={faSpinner}
               pulse
             />
