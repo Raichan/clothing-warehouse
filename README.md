@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A simple product availability listing app for a fictional clothing warehouse. Created as Reaktor's junior application assignment using React, JavaScript and CSS.
+A simple product availability listing app for a fictional clothing warehouse. Job application assignment using React, JavaScript and CSS.
 
 ## Installation
 
